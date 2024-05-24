@@ -1,0 +1,61 @@
+name: build_deploy_aks
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code 
+        uses: actions/checkout@v3
+
+      - name: Azure login
+        id: login
+        uses: azure/login@v1.4.3
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: 'Build and push image'
+        uses: azure/docker-login@v1
+        with:
+          login-server: '${{ secrets.REGISTRY }}.azurecr.io'
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - run: |
+          docker build -f ./Mango.Services.AuthAPI/Dockerfile -t ${{ secrets.REGISTRY }}.azurecr.io/ecommerce-auth-api:latest .
+          docker build -f ./Mango.Services.CouponAPI/Dockerfile -t ${{ secrets.REGISTRY }}.azurecr.io/ecommerce-coupon-api:latest .
+          docker build -f ./Mango.Services.EmailAPI/Dockerfile -t ${{ secrets.REGISTRY }}.azurecr.io/ecommerce-email-api:latest .
+          docker build -f ./Mango.Services.OrderAPI/Dockerfile -t ${{ secrets.REGISTRY }}.azurecr.io/ecommerce-order-api:latest .
+          docker build -f ./Mango.Services.ProductAPI/Dockerfile -t ${{ secrets.REGISTRY }}.azurecr.io/ecommerce-product-api:latest .
+          docker build -f ./Mango.Services.RewardAPI/Dockerfile -t ${{ secrets.REGISTRY }}.azurecr.io/ecommerce-reward-api:latest .
+          docker build -f ./Mango.Services.ShoppingCartAPI/Dockerfile -t ${{ secrets.REGISTRY }}.azurecr.io/ecommerce-cart-api:latest .
+          docker build -f ./Mango.Web/Dockerfile -t ${{ secrets.REGISTRY }}.azurecr.io/ecommerce-web-mvc:latest .
+          docker push ${{ secrets.REGISTRY }}.azurecr.io/ecommerce-auth-api:latest
+          docker push ${{ secrets.REGISTRY }}.azurecr.io/ecommerce-coupon-api:latest
+          docker push ${{ secrets.REGISTRY }}.azurecr.io/ecommerce-email-api:latest
+          docker push ${{ secrets.REGISTRY }}.azurecr.io/ecommerce-order-api:latest
+          docker push ${{ secrets.REGISTRY }}.azurecr.io/ecommerce-product-api:latest
+          docker push ${{ secrets.REGISTRY }}.azurecr.io/ecommerce-reward-api:latest
+          docker push ${{ secrets.REGISTRY }}.azurecr.io/ecommerce-cart-api:latest
+          docker push ${{ secrets.REGISTRY }}.azurecr.io/ecommerce-web-mvc:latest
+
+      - name: Set AKS context
+        id: set-context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: '${{ secrets.resource_group }}' 
+          cluster-name: '${{ secrets.cluster_name }}'
+
+      - name: Setup kubectl
+        id: install-kubectl
+        uses: azure/setup-kubectl@v3
+        
+      - name: Deploy to AKS
+        id: deploy-aks
+        uses: Azure/k8s-deploy@v4
+        with:
+          namespace: 'default'
+          manifests: |
+             Deployment.yaml
+          pull-images: false
