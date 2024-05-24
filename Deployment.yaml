@@ -1,0 +1,606 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-api
+spec:
+  selector:
+    matchLabels:
+      app: auth-api
+  template:
+    metadata:
+      labels:
+        app: auth-api
+    spec:
+      containers:
+      - name: auth-api
+        image: cloudprojectcr.azurecr.io/ecommerce-auth-api:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 7002
+          name: auth-api
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Development
+        - name: ConnectionStrings__DefaultConnection
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: db-auth-api
+        - name: ApiSettings__Secret
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: apisettings-secret
+        - name: ApiSettings__Issuer
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: apisettings-issuer
+        - name: ApiSettings__Audience
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: apisettings-audience
+        - name: ServiceBusConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: servicebusconnectionstring
+        - name: TopicAndQueueNames__RegisterUserQueue
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: topicandqueuenames-registeruserqueue
+        volumeMounts:
+        - name: secrets-store
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+      volumes:
+      - name: secrets-store
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "demo-secret"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-api
+spec:
+  selector:
+    app: auth-api
+  ports:
+  - port: 7002
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coupon-api
+spec:
+  selector:
+    matchLabels:
+      app: coupon-api
+  template:
+    metadata:
+      labels:
+        app: coupon-api
+    spec:
+      containers:
+      - name: coupon-api
+        image: cloudprojectcr.azurecr.io/ecommerce-coupon-api:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 7001
+          name: coupon-api
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Development
+        - name: ConnectionStrings__DefaultConnection
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: db-coupon-api
+        - name: ApiSettings__Secret
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: apisettings-secret
+        - name: ApiSettings__Issuer
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: apisettings-issuer
+        - name: ApiSettings__Audience
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: apisettings-audience
+        - name: Stripe__SecretKey
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: stripe-secretkey
+        volumeMounts:
+        - name: secrets-store
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+      volumes:
+      - name: secrets-store
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "demo-secret"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coupon-api
+spec:
+  selector:
+    app: coupon-api
+  ports:
+  - port: 7001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email-api
+spec:
+  selector:
+    matchLabels:
+      app: email-api
+  template:
+    metadata:
+      labels:
+        app: email-api
+    spec:
+      containers:
+      - name: email-api
+        image: cloudprojectcr.azurecr.io/ecommerce-email-api:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 7299
+          name: email-api
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Development
+        - name: ConnectionStrings__DefaultConnection
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: db-email-api
+        - name: ServiceBusConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: servicebusconnectionstring
+        - name: TopicAndQueueNames__EmailShoppingCartQueue
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: topicandqueuenames-emailshoppingcartqueue
+        - name: TopicAndQueueNames__RegisterUserQueue
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: topicandqueuenames-registeruserqueue
+        - name: TopicAndQueueNames__OrderCreatedTopic
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: topicandqueuenames-ordercreatedtopic
+        - name: TopicAndQueueNames__OrderCreated_Email_Subscription
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: topicandqueuenames-ordercreated-email-subscription
+        volumeMounts:
+        - name: secrets-store
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+      volumes:
+      - name: secrets-store
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "demo-secret"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: email-api
+spec:
+  selector:
+    app: email-api
+  ports:
+  - port: 7299
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-api
+spec:
+  selector:
+    matchLabels:
+      app: order-api
+  template:
+    metadata:
+      labels:
+        app: order-api
+    spec:
+      containers:
+      - name: order-api
+        image: cloudprojectcr.azurecr.io/ecommerce-order-api:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 7004
+          name: order-api
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Development
+        - name: ServiceUrls__ProductAPI
+          value: http://product-api:7000
+        - name: ConnectionStrings__DefaultConnection
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: db-order-api
+        - name: ApiSettings__Secret
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: apisettings-secret
+        - name: ApiSettings__Issuer
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: apisettings-issuer
+        - name: ApiSettings__Audience
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: apisettings-audience
+        - name: ServiceBusConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: servicebusconnectionstring
+        - name: TopicAndQueueNames__OrderCreatedTopic
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: topicandqueuenames-ordercreatedtopic
+        volumeMounts:
+        - name: secrets-store
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+      volumes:
+      - name: secrets-store
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "demo-secret"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-api
+spec:
+  selector:
+    app: order-api
+  ports:
+  - port: 7004
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-api
+spec:
+  selector:
+    matchLabels:
+      app: product-api
+  template:
+    metadata:
+      labels:
+        app: product-api
+    spec:
+      containers:
+      - name: product-api
+        image: cloudprojectcr.azurecr.io/ecommerce-product-api:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 7000
+          name: product-api
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Development
+        - name: ServiceUrls__ProductAPI
+          value: http://product-api:7000
+        - name: ConnectionStrings__DefaultConnection
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: db-product-api
+        - name: ApiSettings__Secret
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: apisettings-secret
+        - name: ApiSettings__Issuer
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: apisettings-issuer
+        - name: ApiSettings__Audience
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: apisettings-audience
+        - name: TopicAndQueueNames__OrderCreatedTopic
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: topicandqueuenames-ordercreatedtopic
+        - name: Stripe__SecretKey
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: stripe-secretkey
+        - name: AzureStorageAccount__ConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: azurestorageaccount-connectionstring
+        - name: AzureStorageAccount__BlobContainerName
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: azurestorageaccount-blobcontainername
+        volumeMounts:
+        - name: secrets-store
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+      volumes:
+      - name: secrets-store
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "demo-secret"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-api
+spec:
+  selector:
+    app: product-api
+  ports:
+  - port: 7000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reward-api
+spec:
+  selector:
+    matchLabels:
+      app: reward-api
+  template:
+    metadata:
+      labels:
+        app: reward-api
+    spec:
+      containers:
+      - name: reward-api
+        image: cloudprojectcr.azurecr.io/ecommerce-reward-api:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 7156
+          name: reward-api
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Development
+        - name: ConnectionStrings__DefaultConnection
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: db-reward-api
+        - name: ServiceBusConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: servicebusconnectionstring
+        - name: TopicAndQueueNames__OrderCreatedTopic
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: topicandqueuenames-ordercreatedtopic
+        - name: TopicAndQueueNames__OrderCreated_Rewards_Subscription
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: topicandqueuenames-ordercreated-rewards-subscription
+        volumeMounts:
+        - name: secrets-store
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+      volumes:
+      - name: secrets-store
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "demo-secret"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reward-api
+spec:
+  selector:
+    app: reward-api
+  ports:
+  - port: 7156
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart-api
+spec:
+  selector:
+    matchLabels:
+      app: cart-api
+  template:
+    metadata:
+      labels:
+        app: cart-api
+    spec:
+      containers:
+      - name: cart-api
+        image: cloudprojectcr.azurecr.io/ecommerce-cart-api:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 7003
+          name: cart-api
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Development
+        - name: ServiceUrls__CouponAPI
+          value: http://coupon-api:7001
+        - name: ServiceUrls__ProductAPI
+          value: http://product-api:7000
+        - name: ConnectionStrings__DefaultConnection
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: db-cart-api
+        - name: ApiSettings__Secret
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: apisettings-secret
+        - name: ApiSettings__Issuer
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: apisettings-issuer
+        - name: ApiSettings__Audience
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: apisettings-audience
+        - name: ServiceBusConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: servicebusconnectionstring
+        - name: TopicAndQueueNames__EmailShoppingCartQueue
+          valueFrom:
+            secretKeyRef:
+              name: demo-secret
+              key: topicandqueuenames-emailshoppingcartqueue
+        volumeMounts:
+        - name: secrets-store
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+      volumes:
+      - name: secrets-store
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "demo-secret"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart-api
+spec:
+  selector:
+    app: cart-api
+  ports:
+  - port: 7003
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-mvc
+spec:
+  selector:
+    matchLabels:
+      app: web-mvc
+  template:
+    metadata:
+      labels:
+        app: web-mvc
+    spec:
+      containers:
+      - name: web-mvc
+        image: cloudprojectcr.azurecr.io/ecommerce-web-mvc:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 7167
+          name: web-mvc
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Development
+        - name: ServiceUrls__AuthAPI
+          value: http://auth-api:7002
+        - name: ServiceUrls__CouponAPI
+          value: http://coupon-api:7001
+        - name: ServiceUrls__ProductAPI
+          value: http://product-api:7000
+        - name: ServiceUrls__ShoppingCartAPI
+          value: http://cart-api:7003
+        - name: ServiceUrls__OrderAPI
+          value: http://order-api:7004
+        volumeMounts:
+        - name: secrets-store
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+      volumes:
+      - name: secrets-store
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "demo-secret"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-mvc
+spec:
+  selector:
+    app: web-mvc
+  ports:
+  - port: 7167

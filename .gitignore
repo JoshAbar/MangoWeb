@@ -8,8 +8,6 @@ ServiceAccount.yaml
 .env
 *.env
 
-appsettings.json
-
 # User-specific files
 *.rsuser
 *.suo
