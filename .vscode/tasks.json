@@ -1,0 +1,119 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/Mango.sln",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "publish",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/Mango.sln",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "watch",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "watch",
+                "run",
+                "--project",
+                "${workspaceFolder}/Mango.sln"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "type": "docker-build",
+            "label": "docker-build: debug",
+            "dependsOn": [
+                "build"
+            ],
+            "dockerBuild": {
+                "tag": "mangomicroservices:dev",
+                "target": "base",
+                "dockerfile": "${workspaceFolder}/Mango.Web/Dockerfile",
+                "context": "${workspaceFolder}",
+                "pull": true
+            },
+            "netCore": {
+                "appProject": "${workspaceFolder}/Mango.Web/Mango.Web.csproj"
+            }
+        },
+        {
+            "type": "docker-build",
+            "label": "docker-build: release",
+            "dependsOn": [
+                "build"
+            ],
+            "dockerBuild": {
+                "tag": "mangomicroservices:latest",
+                "dockerfile": "${workspaceFolder}/Mango.Web/Dockerfile",
+                "context": "${workspaceFolder}",
+                "platform": {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                "pull": true
+            },
+            "netCore": {
+                "appProject": "${workspaceFolder}/Mango.Web/Mango.Web.csproj"
+            }
+        },
+        {
+            "type": "docker-run",
+            "label": "docker-run: debug",
+            "dependsOn": [
+                "docker-build: debug"
+            ],
+            "dockerRun": {
+                "env": {
+                    "ASPNETCORE_ENVIRONMENT": "Development",
+                    "ServiceUrls__AuthAPI": "http://ecommerce-auth-api:80",
+                    "ServiceUrls__CouponAPI": "http://ecommerce-coupon-api:80",
+                    "ServiceUrls__ProductAPI": "http://ecommerce-product-api:80",
+                    "ServiceUrls__ShoppingCartAPI": "http://ecommerce-cart-api:80",
+                    "ServiceUrls__OrderAPI": "http://ecommerce-order-api:80"
+                },
+                "ports": [
+                    {
+                        "hostPort": 7167,
+                        "containerPort": 80
+                    }
+                ],
+                "containerName": "ecommerce-web-mvc",
+                "network": "mango_microservices_default"
+            },
+            "netCore": {
+                "appProject": "${workspaceFolder}/Mango.Web/Mango.Web.csproj",
+                "enableDebugging": true,
+                "configureSsl": false
+            }
+        },
+        {
+            "type": "docker-run",
+            "label": "docker-run: release",
+            "dependsOn": [
+                "docker-build: release"
+            ],
+            "dockerRun": {},
+            "netCore": {
+                "appProject": "${workspaceFolder}/Mango.Web/Mango.Web.csproj"
+            }
+        }
+    ]
+}
