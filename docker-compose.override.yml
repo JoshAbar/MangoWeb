@@ -1,0 +1,107 @@
+# Please refer https://aka.ms/HTTPSinContainer on how to setup an https developer certificate for your ASP.NET Core service.
+
+version: '3.4'
+services:
+  ecommerce-auth-api:
+    ports:
+      - 7002:80
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=${DB_Auth_API}
+      - ApiSettings__Secret=${ApiSettings_Secret}
+      - ApiSettings__Issuer=${ApiSettings_Issuer}
+      - ApiSettings__Audience=${ApiSettings_Audience}
+      - ServiceBusConnectionString=${ServiceBusConnectionString}
+      - TopicAndQueueNames__RegisterUserQueue=${TopicAndQueueNames_RegisterUserQueue}
+
+  ecommerce-coupon-api:
+    ports:
+      - 7001:80
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=${DB_Coupon_API}
+      - ApiSettings__Secret=${ApiSettings_Secret}
+      - ApiSettings__Issuer=${ApiSettings_Issuer}
+      - ApiSettings__Audience=${ApiSettings_Audience}
+      - Stripe__SecretKey=${Stripe_SecretKey}
+
+  ecommerce-email-api:
+    ports:
+      - 7299:80
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=${DB_Email_API}
+      - ServiceBusConnectionString=${ServiceBusConnectionString}
+      - TopicAndQueueNames__EmailShoppingCartQueue=${TopicAndQueueNames_EmailShoppingCartQueue}
+      - TopicAndQueueNames__RegisterUserQueue=${TopicAndQueueNames_RegisterUserQueue}
+      - TopicAndQueueNames__OrderCreatedTopic=${TopicAndQueueNames_OrderCreatedTopic}
+      - TopicAndQueueNames__OrderCreated_Email_Subscription=${TopicAndQueueNames_OrderCreated_Email_Subscription}
+
+  ecommerce-order-api:
+    ports:
+      - 7004:80
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ServiceUrls__ProductAPI=http://ecommerce-product-api:80
+      - ConnectionStrings__DefaultConnection=${DB_Order_API}
+      - ApiSettings__Secret=${ApiSettings_Secret}
+      - ApiSettings__Issuer=${ApiSettings_Issuer}
+      - ApiSettings__Audience=${ApiSettings_Audience}
+      - ServiceBusConnectionString=${ServiceBusConnectionString}
+      - TopicAndQueueNames__OrderCreatedTopic=${TopicAndQueueNames_OrderCreatedTopic}
+      - TopicAndQueueNames__OrderCreated_Email_Subscription=${TopicAndQueueNames_OrderCreated_Email_Subscription}
+      - TopicAndQueueNames__UpdateStripeSessionTopic=${TopicAndQueueNames_UpdateStripeSessionTopic}
+
+  ecommerce-product-api:
+    ports:
+      - 7000:80
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ServiceUrls__ProductAPI=http://ecommerce-product-api:80
+      - ConnectionStrings__DefaultConnection=${DB_Product_API}
+      - ApiSettings__Secret=${ApiSettings_Secret}
+      - ApiSettings__Issuer=${ApiSettings_Issuer}
+      - ApiSettings__Audience=${ApiSettings_Audience}
+      - TopicAndQueueNames__OrderCreatedTopic=${TopicAndQueueNames_OrderCreatedTopic}
+      - Stripe__SecretKey=${Stripe_SecretKey}
+      - AzureStorageAccount__ConnectionString=${AzureStorageAccount_ConnectionString}
+      - AzureStorageAccount__BlobContainerName=${AzureStorageAccount_BlobContainerName}
+
+  ecommerce-reward-api:
+    ports:
+      - 7156:80
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=${DB_Reward_API}
+      - ServiceBusConnectionString=${ServiceBusConnectionString}
+      - TopicAndQueueNames__OrderCreatedTopic=${TopicAndQueueNames_OrderCreatedTopic}
+      - TopicAndQueueNames__OrderCreated_Rewards_Subscription=${TopicAndQueueNames_OrderCreated_Rewards_Subscription}
+
+  ecommerce-cart-api:
+    ports:
+      - 7003:80
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ServiceUrls__CouponAPI=http://ecommerce-coupon-api:80
+      - ServiceUrls__ProductAPI=http://ecommerce-product-api:80
+      - ApiSettings__Secret=${ApiSettings_Secret}
+      - ApiSettings__Issuer=${ApiSettings_Issuer}
+      - ApiSettings__Audience=${ApiSettings_Audience}
+      - ConnectionStrings__DefaultConnection=${DB_Cart_API}
+      - ServiceBusConnectionString=${ServiceBusConnectionString}
+      - TopicAndQueueNames__EmailShoppingCartQueue=${TopicAndQueueNames_EmailShoppingCartQueue}
+
+  ecommerce-web-mvc:
+    ports:
+      - 7167:80
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ServiceUrls__AuthAPI=http://ecommerce-auth-api:80
+      - ServiceUrls__CouponAPI=http://ecommerce-coupon-api:80
+      - ServiceUrls__ProductAPI=http://ecommerce-product-api:80
+      - ServiceUrls__ShoppingCartAPI=http://ecommerce-cart-api:80
+      - ServiceUrls__OrderAPI=http://ecommerce-order-api:80
+    depends_on:
+      - ecommerce-product-api
+      - ecommerce-auth-api
+      - ecommerce-cart-api

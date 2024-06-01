@@ -1,0 +1,60 @@
+# Please refer https://aka.ms/HTTPSinContainer on how to setup an https developer certificate for your ASP.NET Core service.
+
+version: '3.4'
+
+services:
+  ecommerce-auth-api:
+    image: ecommerce-auth-api
+    container_name: ecommerce-auth-api
+    build:
+      context: .
+      dockerfile: Mango.Services.AuthAPI\Dockerfile
+
+  ecommerce-coupon-api:
+    image: ecommerce-coupon-api
+    container_name: ecommerce-coupon-api
+    build:
+      context: .
+      dockerfile: Mango.Services.CouponAPI\Dockerfile
+
+  ecommerce-email-api:
+    image: ecommerce-email-api
+    container_name: ecommerce-email-api
+    build:
+      context: .
+      dockerfile: Mango.Services.EmailAPI\Dockerfile
+
+  ecommerce-order-api:
+    image: ecommerce-order-api
+    container_name: ecommerce-order-api
+    build:
+      context: .
+      dockerfile: Mango.Services.OrderAPI\Dockerfile
+
+  ecommerce-product-api:
+    image: ecommerce-product-api
+    container_name: ecommerce-product-api
+    build:
+      context: .
+      dockerfile: Mango.Services.ProductAPI\Dockerfile
+
+  ecommerce-reward-api:
+    image: ecommerce-reward-api
+    container_name: ecommerce-reward-api
+    build:
+      context: .
+      dockerfile: Mango.Services.RewardAPI\Dockerfile
+
+  ecommerce-cart-api:
+    image: ecommerce-cart-api
+    container_name: ecommerce-cart-api
+    build:
+      context: .
+      dockerfile: Mango.Services.ShoppingCartAPI\Dockerfile
+
+  ecommerce-web-mvc:
+    image: ecommerce-web-mvc
+    container_name: ecommerce-web-mvc
+    build:
+      context: .
+      dockerfile: Mango.Web\Dockerfile
